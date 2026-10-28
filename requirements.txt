@@ -2,3 +2,11 @@ fastapi
 uvicorn[standard]
 python-multipart
 opencv-python-headless
+sqlalchemy
+python-dotenv
+argon2-cffi
+itsdangerous
+pillow
+transformers
+torch
+torchvision
