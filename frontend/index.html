@@ -1,0 +1,881 @@
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0b18">
+  <meta name="description" content="ContentVerify AI — a dark, modern media verification dashboard.">
+  <link rel="icon" href="data:,">
+  <title>ContentVerify AI</title>
+  <link rel="stylesheet" href="/static/styles.css">
+
+  <style>
+    [hidden] {
+      display: none !important;
+    }
+
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background:
+        radial-gradient(ellipse at top, #34215c 0%, transparent 55%),
+        #0a0a15;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 430px;
+      padding: 35px;
+      border: 1px solid #393354;
+      border-radius: 20px;
+      background: #121222;
+      box-shadow: 0 25px 80px #0008;
+    }
+
+    .auth-brand {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .auth-logo {
+      width: 62px;
+      height: 62px;
+      margin: 0 auto 15px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background: #292044;
+      color: #b69aff;
+      font-size: 30px;
+    }
+
+    .auth-brand h1 {
+      margin: 0;
+      font-size: 27px;
+      color: #f4f0ff;
+    }
+
+    .auth-brand h1 span {
+      color: #a47aff;
+    }
+
+    .auth-brand p {
+      color: #9998b5;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 5px;
+      margin-bottom: 25px;
+      border-radius: 10px;
+      background: #0b0b17;
+    }
+
+    .auth-tabs button {
+      padding: 12px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #aaa8c4;
+      cursor: pointer;
+    }
+
+    .auth-tabs button.active {
+      color: white;
+      background: #7042d3;
+    }
+
+    .auth-form label {
+      display: block;
+      margin: 15px 0 7px;
+      color: #d8d4e9;
+      font-size: 13px;
+    }
+
+    .auth-form input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #34314f;
+      border-radius: 9px;
+      background: #0c0c18;
+      color: white;
+      font: inherit;
+      outline: none;
+    }
+
+    .auth-form input:focus {
+      border-color: #9667ff;
+    }
+
+    .auth-submit {
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      border: 0;
+      border-radius: 9px;
+      background: linear-gradient(100deg, #7945e8, #975aff);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .auth-submit:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    .auth-message {
+      display: none;
+      margin-top: 16px;
+      padding: 11px;
+      border-radius: 8px;
+      background: #282038;
+      color: #e5d9ff;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .auth-message.visible {
+      display: block;
+    }
+
+    .auth-footer {
+      margin-top: 22px;
+      text-align: center;
+      color: #77758f;
+      font-size: 11px;
+    }
+
+    @media (max-width: 480px) {
+      .auth-card {
+        padding: 25px 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- SVG ICON DEFINITIONS -->
+  <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-shield" viewBox="0 0 48 48">
+      <path d="M24 3 42 10v12c0 12-7.5 19.5-18 23C13.5 41.5 6 34 6 22V10L24 3Z"/>
+      <path d="m15 23 6 6 13-14"/>
+    </symbol>
+
+    <symbol id="i-grid" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+    </symbol>
+
+    <symbol id="i-upload" viewBox="0 0 24 24">
+      <path d="M12 16V4m0 0L7 9m5-5 5 5"/>
+      <path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>
+    </symbol>
+
+    <symbol id="i-clock" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 7v5l3.5 2"/>
+    </symbol>
+
+    <symbol id="i-chart" viewBox="0 0 24 24">
+      <path d="M4 20V11h4v9M10 20V5h4v15M16 20v-7h4v7M3 20h18"/>
+    </symbol>
+
+    <symbol id="i-settings" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="m19.4 15 .1.1 1.1.8-1.5 2.6-1.3-.5a7.8 7.8 0 0 1-1.6.9l-.2 1.4h-3l-.2-1.4a7.8 7.8 0 0 1-1.6-.9l-1.3.5-1.5-2.6 1.1-.8a7.5 7.5 0 0 1 0-1.9l-1.1-.8 1.5-2.6 1.3.5a7.8 7.8 0 0 1 1.6-.9l.2-1.4h3l.2 1.4a7.8 7.8 0 0 1 1.6.9l1.3-.5 1.5 2.6-1.1.8a7.5 7.5 0 0 1 0 1.8Z" transform="translate(-1 -1) scale(1.08)"/>
+    </symbol>
+
+    <symbol id="i-bell" viewBox="0 0 24 24">
+      <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>
+    </symbol>
+
+    <symbol id="i-chevron" viewBox="0 0 24 24">
+      <path d="m7 10 5 5 5-5"/>
+    </symbol>
+
+    <symbol id="i-cloud" viewBox="0 0 24 24">
+      <path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19.5 10 4 4 0 0 1 19 18h-2"/>
+      <path d="m9 14 3-3 3 3m-3-3v9"/>
+    </symbol>
+
+    <symbol id="i-play" viewBox="0 0 24 24">
+      <path d="m8 5 12 7-12 7V5Z"/>
+    </symbol>
+
+    <symbol id="i-check" viewBox="0 0 24 24">
+      <path d="m5 12 4 4L19 6"/>
+    </symbol>
+
+    <symbol id="i-alert" viewBox="0 0 24 24">
+      <path d="M10.3 4.5 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 4.5a2 2 0 0 0-3.4 0Z"/>
+      <path d="M12 9v5m0 3h.01"/>
+    </symbol>
+
+    <symbol id="i-info" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 11v5m0-8h.01"/>
+    </symbol>
+
+    <symbol id="i-download" viewBox="0 0 24 24">
+      <path d="M12 3v12m0 0 5-5m-5 5-5-5"/>
+      <path d="M5 17v3h14v-3"/>
+    </symbol>
+
+    <symbol id="i-refresh" viewBox="0 0 24 24">
+      <path d="M20 7v5h-5M4 17v-5h5"/>
+      <path d="M6.1 9a7 7 0 0 1 11.6-2L20 12M4 12l2.3 5a7 7 0 0 0 11.6-2"/>
+    </symbol>
+
+    <symbol id="i-image" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <path d="m21 15-5-5L5 21"/>
+    </symbol>
+
+    <symbol id="i-video" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="13" height="14" rx="2"/>
+      <path d="m16 10 5-3v10l-5-3"/>
+    </symbol>
+
+    <symbol id="i-file" viewBox="0 0 24 24">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
+      <path d="M14 2v6h6M8 13h8m-8 4h8"/>
+    </symbol>
+
+    <symbol id="i-close" viewBox="0 0 24 24">
+      <path d="m6 6 12 12M18 6 6 18"/>
+    </symbol>
+
+    <symbol id="i-menu" viewBox="0 0 24 24">
+      <path d="M4 6h16M4 12h16M4 18h16"/>
+    </symbol>
+
+    <symbol id="i-lock" viewBox="0 0 24 24">
+      <rect x="4" y="10" width="16" height="11" rx="2"/>
+      <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/>
+    </symbol>
+
+    <symbol id="i-sparkle" viewBox="0 0 24 24">
+      <path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Zm7 12 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/>
+    </symbol>
+  </svg>
+
+  <!-- LOGIN AND REGISTRATION SCREEN -->
+  <section class="auth-overlay" id="auth-screen">
+    <div class="auth-card">
+
+      <div class="auth-brand">
+        <div class="auth-logo">🛡</div>
+        <h1>ContentVerify <span>AI</span></h1>
+        <p>AI-powered deepfake and media verification</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" class="active" id="login-tab">Login</button>
+        <button type="button" id="register-tab">Create Account</button>
+      </div>
+
+      <form class="auth-form" id="auth-form">
+        <div id="name-field" hidden>
+          <label for="auth-name">Full name</label>
+          <input id="auth-name" type="text" autocomplete="name" maxlength="100" placeholder="Enter your name">
+        </div>
+
+        <label for="auth-email">Email address</label>
+        <input id="auth-email" type="email" autocomplete="email" maxlength="255" placeholder="you@example.com" required>
+
+        <label for="auth-password">Password</label>
+        <input id="auth-password" type="password" autocomplete="current-password" minlength="8" placeholder="Enter your password" required>
+
+        <button type="submit" class="auth-submit" id="auth-submit">Login</button>
+
+        <div class="auth-message" id="auth-message" role="status" aria-live="polite"></div>
+      </form>
+
+      <div class="auth-footer">
+        Your account is protected by ContentVerify AI authentication.
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN APPLICATION -->
+  <div class="app-shell" id="app-screen" hidden>
+
+    <header class="topbar">
+      <a class="brand" href="#analyze" aria-label="ContentVerify AI home">
+        <span class="brand-mark">
+          <svg><use href="#i-shield"/></svg>
+        </span>
+        <span class="brand-copy">
+          <strong>ContentVerify <em>AI</em></strong>
+          <small>AI-powered deepfake &amp; media verification</small>
+        </span>
+      </a>
+
+      <div class="topbar-actions">
+        <button class="icon-button notification-button" aria-label="Notifications" title="Notifications">
+          <svg><use href="#i-bell"/></svg><i></i>
+        </button>
+        <span class="top-divider"></span>
+        <button class="profile-button" id="profile-button" aria-label="User profile">
+          <span class="avatar" id="profile-avatar">U</span>
+          <span id="profile-name">User</span>
+          <svg class="chevron"><use href="#i-chevron"/></svg>
+        </button>
+        <button class="outline-button" id="logout-button" type="button">Logout</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-label">WORKSPACE</div>
+
+      <nav class="nav-list" aria-label="Main navigation">
+        <button class="nav-item" data-page="dashboard">
+          <svg><use href="#i-grid"/></svg><span>Dashboard</span>
+        </button>
+
+        <button class="nav-item active" data-page="analyze">
+          <svg><use href="#i-upload"/></svg><span>Analyze Media</span>
+        </button>
+
+        <button class="nav-item" data-page="history">
+          <svg><use href="#i-clock"/></svg><span>History</span>
+          <span class="nav-count" id="history-count">0</span>
+        </button>
+
+        <button class="nav-item" data-page="reports">
+          <svg><use href="#i-chart"/></svg><span>Reports</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-label sidebar-label-lower">PREFERENCES</div>
+
+      <nav class="nav-list">
+        <button class="nav-item" data-page="settings">
+          <svg><use href="#i-settings"/></svg><span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="secure-icon"><svg><use href="#i-lock"/></svg></div>
+        <strong>Your files stay yours</strong>
+        <p>Uploaded media is processed by the ContentVerify AI backend.</p>
+        <span class="privacy-pill"><i></i> Authenticated session</span>
+      </div>
+
+      <div class="sidebar-footer">CONTENTVERIFY AI <span>·</span> WORKSPACE</div>
+    </aside>
+
+    <main class="main-content">
+
+      <div class="mobile-heading">
+        <button class="icon-button menu-button" id="menu-button" aria-label="Toggle navigation">
+          <svg><use href="#i-menu"/></svg>
+        </button>
+        <span id="mobile-title">Analyze Media</span>
+      </div>
+
+      <!-- ANALYZE PAGE -->
+      <section class="page-view active" id="page-analyze">
+        <div class="page-heading">
+          <div class="heading-icon"><svg><use href="#i-upload"/></svg></div>
+          <div>
+            <div class="eyebrow">MEDIA AUTHENTICITY WORKSPACE</div>
+            <h1>Analyze Media</h1>
+            <p>Upload an image for backend validation and analysis.</p>
+          </div>
+          <span class="preview-tag"><i></i> AI WORKSPACE</span>
+        </div>
+
+        <div class="analyze-grid">
+          <section class="panel upload-panel">
+            <div class="panel-kicker">
+              <span class="step-number">01</span>
+              <span>UPLOAD YOUR MEDIA</span>
+              <span class="optional-label">ONE FILE</span>
+            </div>
+
+            <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose an image or video to upload">
+              <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm,.jpg,.jpeg,.png,.webp,.mp4,.mov,.webm" hidden>
+              <div class="drop-icon"><svg><use href="#i-cloud"/></svg></div>
+              <h2>Drag &amp; drop your file here</h2>
+              <p>or <button type="button" class="text-button" id="browse-button">browse files</button></p>
+              <div class="file-types">
+                <span>JPG</span><span>PNG</span><span>WEBP</span>
+              </div>
+              <small>Maximum file size: 100 MB</small>
+            </div>
+
+            <div class="file-card empty-file" id="file-card">
+              <span class="file-thumb" id="file-thumb"><svg><use href="#i-file"/></svg></span>
+              <span class="file-copy">
+                <strong id="file-name">No media selected</strong>
+                <small id="file-meta">Choose an image or video to get started</small>
+              </span>
+              <span class="file-status" id="file-status">WAITING</span>
+              <button class="remove-file icon-button" id="remove-file" aria-label="Remove selected file" title="Remove file">
+                <svg><use href="#i-close"/></svg>
+              </button>
+            </div>
+
+            <div class="upload-tip">
+              <svg><use href="#i-info"/></svg>
+              <span>Selected media is uploaded to the backend when you start analysis.</span>
+            </div>
+
+            <button class="primary-button analyze-button" id="analyze-button">
+              <svg><use href="#i-sparkle"/></svg>
+              <span>Analyze Media</span>
+              <span class="button-arrow">→</span>
+            </button>
+
+            <div class="button-caption">AI predictions are not proof of authenticity.</div>
+          </section>
+
+          <!-- RESULTS PANEL -->
+          <section class="panel result-panel" id="result-panel">
+            <div class="result-header">
+              <div class="result-check"><svg><use href="#i-check"/></svg></div>
+              <div class="result-title">
+                <div class="result-heading-line">
+                  <h2>Analysis Result</h2>
+                  <span class="demo-badge">WAITING</span>
+                </div>
+                <p id="result-subtitle">Select a file to begin.</p>
+              </div>
+            </div>
+
+            <div class="demo-notice">
+              <svg><use href="#i-info"/></svg>
+              <span><strong>Important:</strong> A model prediction is not proof that media is genuine or manipulated.</span>
+            </div>
+
+            <div class="result-summary">
+              <div class="media-preview" id="media-preview">
+                <div class="preview-art" aria-hidden="true">
+                  <div class="preview-orbit orbit-one"></div>
+                  <div class="preview-orbit orbit-two"></div>
+                  <div class="preview-person">
+                    <span class="person-hair"></span>
+                    <span class="person-face"></span>
+                    <span class="person-neck"></span>
+                    <span class="person-shirt"></span>
+                  </div>
+                  <div class="preview-play"><svg><use href="#i-play"/></svg></div>
+                </div>
+                <div class="media-caption">
+                  <span class="live-dot"></span>
+                  <span id="preview-caption">No file selected</span>
+                  <span class="caption-time"></span>
+                </div>
+              </div>
+
+              <div class="verdict-column">
+                <div class="verdict-card">
+                  <div class="verdict-title">
+                    <svg><use href="#i-alert"/></svg>
+                    <span id="verdict-text">Waiting for analysis</span>
+                  </div>
+                  <p id="verdict-copy">Upload an image to receive the model's prediction.</p>
+                </div>
+
+                <div class="score-row">
+                  <span>Model confidence</span>
+                  <strong id="score-value">—</strong>
+                </div>
+
+                <div class="score-track"><span id="score-bar" style="width:0%"></span></div>
+                <div class="score-caption"><span>LOW</span><span>HIGH</span></div>
+              </div>
+            </div>
+
+            <div class="details-heading">
+              <span class="details-icon"><svg><use href="#i-info"/></svg></span>
+              <strong>Analysis Details</strong>
+              <span class="details-line"></span>
+            </div>
+
+            <div class="details-table">
+              <div>
+                <span>Media Type</span>
+                <strong id="detail-type"><i class="type-icon"><svg><use href="#i-file"/></svg></i> Not selected</strong>
+              </div>
+              <div><span>Dimensions / Duration</span><strong id="detail-duration">—</strong></div>
+              <div><span>Model Status</span><strong id="detail-model-status"><span class="model-dot"></span> Waiting</strong></div>
+              <div><span>Analyzed At</span><strong id="detail-date">—</strong></div>
+            </div>
+
+            <div class="result-actions">
+              <button class="outline-button download-button" id="download-button">
+                <svg><use href="#i-download"/></svg>Download Report
+              </button>
+              <button class="outline-button new-button" id="new-button">
+                <svg><use href="#i-refresh"/></svg>New Analysis
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <div class="bottom-note">
+          <span class="bottom-shield"><svg><use href="#i-shield"/></svg></span>
+          <span><strong>Designed for transparency.</strong> Predictions may be incorrect and should be independently verified.</span>
+          <button class="learn-more" data-page="settings">About this app <span>→</span></button>
+        </div>
+      </section>
+
+      <!-- DASHBOARD PAGE -->
+      <section class="page-view secondary-view" id="page-dashboard">
+        <div class="page-heading">
+          <div class="heading-icon"><svg><use href="#i-grid"/></svg></div>
+          <div>
+            <div class="eyebrow">YOUR WORKSPACE</div>
+            <h1>Dashboard</h1>
+            <p>A quick overview of your media analysis activity.</p>
+          </div>
+          <button class="primary-button compact-button" data-goto="analyze">
+            <svg><use href="#i-upload"/></svg>Analyze Media
+          </button>
+        </div>
+
+        <div class="stat-grid">
+          <article class="panel stat-card">
+            <span class="stat-icon violet"><svg><use href="#i-file"/></svg></span>
+            <span class="stat-label">Files analyzed</span>
+            <strong id="stat-analyzed">0</strong>
+            <small>Saved to your account</small>
+          </article>
+
+          <article class="panel stat-card">
+            <span class="stat-icon green"><svg><use href="#i-check"/></svg></span>
+            <span class="stat-label">Supported formats</span>
+            <strong>5 formats</strong>
+            <small>JPG, PNG, WEBP, MP4, MOV</small>
+          </article>
+
+          <article class="panel stat-card">
+            <span class="stat-icon blue"><svg><use href="#i-lock"/></svg></span>
+            <span class="stat-label">Account</span>
+            <strong>Signed in</strong>
+            <small>Personal analysis history</small>
+          </article>
+        </div>
+
+        <section class="panel list-panel">
+          <div class="list-panel-head">
+            <div><h2>Recent activity</h2><p>Your latest analyses appear here.</p></div>
+            <button class="quiet-button" data-goto="history">View history <span>→</span></button>
+          </div>
+
+          <div id="dashboard-recent" class="empty-state">
+            <span class="empty-state-icon"><svg><use href="#i-clock"/></svg></span>
+            <strong>No activity yet</strong>
+            <p>Choose a file to start your first analysis.</p>
+            <button class="outline-button" data-goto="analyze">Go to Analyze Media →</button>
+          </div>
+        </section>
+      </section>
+
+      <!-- HISTORY PAGE -->
+      <section class="page-view secondary-view" id="page-history">
+        <div class="page-heading">
+          <div class="heading-icon"><svg><use href="#i-clock"/></svg></div>
+          <div>
+            <div class="eyebrow">SAVED RECORDS</div>
+            <h1>History</h1>
+            <p>Review your saved analysis records.</p>
+          </div>
+        </div>
+
+        <section class="panel list-panel">
+          <div class="list-panel-head">
+            <div><h2>Analysis history</h2><p>Records are associated with your account.</p></div>
+          </div>
+
+          <div id="history-list" class="empty-state">
+            <span class="empty-state-icon"><svg><use href="#i-clock"/></svg></span>
+            <strong>No analyses yet</strong>
+            <p>Your saved analyses will appear here.</p>
+            <button class="outline-button" data-goto="analyze">Analyze your first file →</button>
+          </div>
+        </section>
+      </section>
+
+      <!-- REPORTS PAGE -->
+      <section class="page-view secondary-view" id="page-reports">
+        <div class="page-heading">
+          <div class="heading-icon"><svg><use href="#i-chart"/></svg></div>
+          <div>
+            <div class="eyebrow">EXPORT CENTER</div>
+            <h1>Reports</h1>
+            <p>Download the report for your latest analysis.</p>
+          </div>
+        </div>
+
+        <section class="panel report-card">
+          <div class="report-illustration"><svg><use href="#i-file"/></svg><span class="report-sparkle">✦</span></div>
+          <div class="report-copy">
+            <span class="demo-badge">JSON REPORT</span>
+            <h2>Analysis report</h2>
+            <p>Download the report for the most recent analysis.</p>
+            <button class="primary-button compact-button" id="download-button-secondary">
+              <svg><use href="#i-download"/></svg>Download JSON report
+            </button>
+          </div>
+          <div class="report-meta">
+            <span>FORMAT<strong>JSON</strong></span>
+            <span>CONTENT<strong>Analysis data</strong></span>
+          </div>
+        </section>
+      </section>
+
+      <!-- SETTINGS PAGE -->
+      <section class="page-view secondary-view" id="page-settings">
+        <div class="page-heading">
+          <div class="heading-icon"><svg><use href="#i-settings"/></svg></div>
+          <div>
+            <div class="eyebrow">APP CONFIGURATION</div>
+            <h1>Settings</h1>
+            <p>Account and application information.</p>
+          </div>
+        </div>
+
+        <section class="panel settings-panel">
+          <div class="settings-row">
+            <span class="setting-icon"><svg><use href="#i-lock"/></svg></span>
+            <div><strong>Account security</strong><p>Your account uses the backend authentication system.</p></div>
+            <span class="setting-value good"><i></i> Enabled</span>
+          </div>
+
+          <div class="settings-row">
+            <span class="setting-icon"><svg><use href="#i-sparkle"/></svg></span>
+            <div><strong>Image detector</strong><p>Predictions come from a pretrained image classification model and may be incorrect.</p></div>
+            <span class="setting-value pending"><i></i> Experimental</span>
+          </div>
+
+          <div class="settings-row">
+            <span class="setting-icon"><svg><use href="#i-clock"/></svg></span>
+            <div><strong>Analysis history</strong><p>Image-analysis metadata is saved to your account database.</p></div>
+            <span class="setting-value good"><i></i> SQLite</span>
+          </div>
+        </section>
+
+        <section class="panel next-steps">
+          <div class="next-icon"><svg><use href="#i-info"/></svg></div>
+          <div>
+            <h2>Important information</h2>
+            <p>Model predictions are not forensic proof. Video deepfake detection is not implemented in the current backend.</p>
+          </div>
+        </section>
+      </section>
+
+      <footer class="main-footer">
+        <span>ContentVerify AI <i>·</i> Media verification workspace</span>
+        <span><i class="footer-dot"></i> Connected to backend</span>
+      </footer>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- AUTHENTICATION SCRIPT -->
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+
+      const form = $("auth-form");
+      const loginTab = $("login-tab");
+      const registerTab = $("register-tab");
+      const nameField = $("name-field");
+      const nameInput = $("auth-name");
+      const emailInput = $("auth-email");
+      const passwordInput = $("auth-password");
+      const submitButton = $("auth-submit");
+      const messageBox = $("auth-message");
+
+      let mode = "login";
+
+      function showMessage(message) {
+        messageBox.textContent = message;
+        messageBox.classList.add("visible");
+      }
+
+      function setMode(nextMode) {
+        mode = nextMode;
+
+        const registering = mode === "register";
+
+        loginTab.classList.toggle("active", !registering);
+        registerTab.classList.toggle("active", registering);
+
+        nameField.hidden = !registering;
+        nameInput.required = registering;
+
+        passwordInput.autocomplete = registering
+          ? "new-password"
+          : "current-password";
+
+        submitButton.textContent = registering
+          ? "Create Account"
+          : "Login";
+
+        messageBox.classList.remove("visible");
+      }
+
+      function showApp(user) {
+        $("auth-screen").hidden = true;
+        $("app-screen").hidden = false;
+
+        if (user) {
+          const displayName = user.name || user.email || "User";
+          $("profile-name").textContent = displayName;
+          $("profile-avatar").textContent = displayName.charAt(0).toUpperCase();
+        }
+
+        window.dispatchEvent(new Event("contentverify:authenticated"));
+      }
+
+      async function checkSession() {
+        try {
+          const response = await fetch("/api/auth/me", {
+            credentials: "same-origin"
+          });
+
+          if (response.ok) {
+            const user = await response.json();
+            showApp(user);
+          } else {
+            $("auth-screen").hidden = false;
+            $("app-screen").hidden = true;
+          }
+        } catch (error) {
+          $("auth-screen").hidden = false;
+          $("app-screen").hidden = true;
+          console.error("Session check failed:", error);
+        }
+      }
+
+      loginTab.addEventListener("click", () => setMode("login"));
+      registerTab.addEventListener("click", () => setMode("register"));
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const name = nameInput.value.trim();
+
+        if (mode === "register" && !name) {
+          showMessage("Please enter your name.");
+          return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Please wait...";
+        messageBox.classList.remove("visible");
+
+        try {
+          const endpoint = mode === "register"
+            ? "/api/auth/register"
+            : "/api/auth/login";
+
+          const payload = { email, password };
+
+          if (mode === "register") {
+            payload.name = name;
+          }
+
+          let response = await fetch(endpoint, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          let data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              typeof data.detail === "string"
+                ? data.detail
+                : "Authentication failed. Please check your details."
+            );
+          }
+
+          if (mode === "register") {
+            response = await fetch("/api/auth/login", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ email, password })
+            });
+
+            data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(
+                typeof data.detail === "string"
+                  ? data.detail
+                  : "Account created. Please log in."
+              );
+            }
+          }
+
+          showApp(data.user || data);
+
+        } catch (error) {
+          showMessage(error.message || "Something went wrong.");
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = mode === "register"
+            ? "Create Account"
+            : "Login";
+        }
+      });
+
+      $("logout-button").addEventListener("click", async () => {
+        try {
+          await fetch("/api/auth/logout", {
+            method: "POST",
+            credentials: "same-origin"
+          });
+        } catch (error) {
+          console.error("Logout request failed:", error);
+        }
+
+        $("app-screen").hidden = true;
+        $("auth-screen").hidden = false;
+        setMode("login");
+        passwordInput.value = "";
+        messageBox.classList.remove("visible");
+      });
+
+      $("app-screen").hidden = true;
+      checkSession();
+    })();
+  </script>
+
+  <!-- MAIN FRONTEND JAVASCRIPT -->
+  <script src="/static/app.js"></script>
+
+</body>
+</html>
+
