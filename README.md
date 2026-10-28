@@ -1,32 +1,77 @@
-# ContentVerify AI — Connected Frontend + FastAPI Demo
+# ContentVerify AI
 
-This package preserves your supplied frontend design and connects its Analyze button to a FastAPI backend.
+**AI-Powered Image Authenticity Detection**
 
-## Run on Windows
-Open a terminal in the extracted project root (the folder containing `requirements.txt`):
+ContentVerify AI is a web-based application that uses a pretrained machine learning model to classify images as likely real or AI-generated.
 
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m uvicorn backend.main:app --reload
-```
+## Features
 
-If PowerShell blocks activation, use Command Prompt and run `.venv\Scripts\activate.bat`.
+* User registration and login
+* Image upload and validation
+* AI-powered image classification
+* Prediction results with confidence scores
+* User-specific analysis history
+* Interactive web dashboard
 
-Open:
-- Website: http://127.0.0.1:8000
-- API health: http://127.0.0.1:8000/api/health
-- Interactive API docs: http://127.0.0.1:8000/docs
+## Technologies Used
 
-## Current functionality
-- Serves the original HTML/CSS/JS frontend.
-- The Analyze button uploads the selected file to `/api/analyze`.
-- FastAPI checks media type and size.
-- OpenCV validates image decoding or reads basic video metadata.
-- Temporary uploaded files are deleted after processing.
-- Frontend displays a truthful backend validation status.
+### Backend
+
+* Python
+* FastAPI
+* Uvicorn
+
+### AI and Machine Learning
+
+* PyTorch
+* Hugging Face Transformers
+* Vision Transformer (ViT)
+* Model: `delpot/steganograph-ia-detector`
+
+### Frontend
+
+* HTML5
+* CSS3
+* JavaScript
+
+### Database and Authentication
+
+* SQLite
+* SQLAlchemy
+* Argon2 password hashing
+* Signed session cookies
+
+## Run Locally
+
+1. Create and activate a Python virtual environment.
+
+2. Install the dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Configure the required environment variables in your local `.env` file.
+
+4. Start the application:
+
+   ```bash
+   python -m uvicorn backend.main:app
+   ```
+
+5. Open `http://127.0.0.1:8000/` in your browser.
 
 ## Limitations
-No deepfake detection model, database, login, or persistent history is included yet. The app does not decide whether a file is real or fake; any displayed score in the example/demo areas is illustrative only. Do not present it as an actual model prediction.
+
+* Image predictions may be incorrect and are not proof of authenticity.
+* Video upload validation is available, but video deepfake detection is not implemented.
+
+## Future Scope
+
+* Video deepfake detection
+* Improved model evaluation
+* Explainable AI
+* Downloadable analysis reports
+* Cloud deployment
+
+**Note:** This project is a prototype for AI-assisted image authenticity assessment.
